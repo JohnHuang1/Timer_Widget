@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">Timer Widget</string>
+    <string-array name="time_type_array">
+        <item>Select</item>
+        <item>Seconds</item>
+        <item>Minutes</item>
+        <item>Hours</item>
+    </string-array>
+    <string name="play">PLAY</string>
+    <string name="pause">PAUSE</string>
+    <string name="okay">OKAY</string>
+    <string name="set_time">Set Time For Timer</string>
+    <string name="widget_time_pref_key">com.timerwidget.default.timer.length.</string>
+    <string name="pref_time_key">widget.</string>
+    <string name="stop">STOP</string>
+    <string name="tap_to_wake_me_up">TAP\nTO WAKE ME UP</string>
+    <string name="_20_00">20:00</string>
+    <string name="spinner_prompt">Select Time Type</string>
+    <integer name="default_timer_length">1200000</integer>
+</resources>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/timerTextView"
+        android:layout_width="120dp"
+        android:layout_height="60dp"
+        android:background="@drawable/dark_textbox"
+        android:textAlignment="center"
+        android:textColor="@android:color/white"
+        android:textSize="30sp"
+        android:text="@string/_20_00"/>
+
+    <Button
+        android:id="@+id/playPauseButton"
+        android:layout_width="58dp"
+        android:layout_height="40dp"
+        android:layout_below="@+id/timerTextView"
+        android:layout_alignStart="@+id/timerTextView"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="4dp"
+        android:background="@drawable/dark_play_pause_button"
+        android:text="@string/play"
+        android:textColor="@android:color/white" />
+
+    <Button
+        android:id="@+id/stopButton"
+        android:layout_width="58dp"
+        android:layout_height="40dp"
+        android:layout_below="@+id/timerTextView"
+        android:layout_alignEnd="@+id/timerTextView"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="0dp"
+        android:background="@drawable/dark_stop_button"
+        android:clickable="false"
+        android:text="@string/stop"
+        android:textColor="@color/half_transparent_white" />
+
+    <Button
+        android:id="@+id/wakeButton"
+        android:layout_width="120dp"
+        android:layout_height="104dp"
+        android:layout_alignStart="@+id/timerTextView"
+        android:layout_alignTop="@+id/timerTextView"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="0dp"
+        android:background="@drawable/wake_button_background"
+        android:text="@string/tap_to_wake_me_up"
+        android:visibility="visible" />
+</RelativeLayout>
