@@ -16,5 +16,10 @@
     <string name="tap_to_wake_me_up">TAP\nTO WAKE ME UP</string>
     <string name="_20_00">20:00</string>
     <string name="spinner_prompt">Select Time Type</string>
+    <string name="_00">00</string>
+    <string name="hr">Hr</string>
+    <string name="min">Min</string>
+    <string name="sec">Sec</string>
+    <string name="confirm">CONFIRM</string>
     <integer name="default_timer_length">1200000</integer>
 </resources>

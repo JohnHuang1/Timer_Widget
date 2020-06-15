@@ -136,7 +136,7 @@ public class TimerService extends Service {
                 } else if (minutes != 0){
                     output = String.format("%1$02d:%2$tS", minutes, millisLeft);
                 } else {
-                    output = String.format("%1$tS.%1$tL", millisLeft).substring(0, 5);
+                    output = String.format("%1$tS.%1$tL", millisLeft).substring(0, 4);
                 }
                 sendBroadcast(new Intent(getApplicationContext(), TimerWidgetProvider.class).setAction(TimerWidgetProvider.ACTION_TICK).putExtra(TimerWidgetProvider.EXTRA_TIME_STRING, output).putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetID));
             }
