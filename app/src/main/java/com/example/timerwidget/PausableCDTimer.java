@@ -1,9 +1,11 @@
 package com.example.timerwidget;
 
 import android.os.CountDownTimer;
+import android.util.Log;
 
 abstract class PausableCDTimer {
     private CountDownTimer timer = null;
+    private long defaultLength = 0;
     private long timeLeft = 0;
     private boolean timerRunning = false;
     public int widgetID;
@@ -13,12 +15,13 @@ abstract class PausableCDTimer {
 
     public PausableCDTimer(int id, long lengthMillis, boolean runAtStart){
         widgetID = id;
+        defaultLength = lengthMillis;
         create(lengthMillis, runAtStart);
     }
 
-    private void create(long length, boolean run){
+    private void create(long length, boolean runAtStart){
         timeLeft = length;
-        timer = new CountDownTimer(length, 1000) {
+        timer = new CountDownTimer(length, 100) {
             @Override
             public void onTick(long l) {
                 timeLeft = l;
@@ -30,25 +33,31 @@ abstract class PausableCDTimer {
                 finish();
             }
         };
-        if(run) start();
+        if(runAtStart) start();
     }
     public void start(){
+        Log.d("PausableCDTimer", "Timer Started timerRunning = " + timerRunning);
         if(!timerRunning){
-            timer.start();
-            timerRunning = true;
+            if(timer != null){
+                timer.start();
+                timerRunning = true;
+            } else {
+                create(timeLeft, true);
+            }
         }
     }
     public void stop(){
         if(timer != null){
             timer.cancel();
-            timer = null;
+            create(defaultLength, false);
         }
         timerRunning = false;
-        timeLeft = 0;
+        timeLeft = defaultLength;
     }
     public void pause(){
         if(timerRunning){
             timer.cancel();
+            create(timeLeft, false);
             timerRunning = false;
         }
     }

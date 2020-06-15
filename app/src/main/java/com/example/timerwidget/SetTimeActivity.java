@@ -38,15 +38,15 @@ public class SetTimeActivity extends AppCompatActivity implements AdapterView.On
             long entryTime = Long.parseLong(userEntry);
             long multiplier = 1;
             switch(timeTypeEntry){
-                case "Sec": {
+                case "Seconds": {
                     multiplier = 1000;
                     break;
                 }
-                case "Min":{
+                case "Minutes":{
                     multiplier = 60000;
                     break;
                 }
-                case "Hour": {
+                case "Hours": {
                     multiplier = 3600000;
                     break;
                 }
@@ -56,9 +56,11 @@ public class SetTimeActivity extends AppCompatActivity implements AdapterView.On
             entryTime *= multiplier;
             editor.putLong(getString(R.string.pref_time_key) + widgetID, entryTime);
             editor.apply();
-            Log.d("onConfirmButtonClick", "entryTime = " + entryTime + " widgetID = " + widgetID);
-            Intent updateIntent = new Intent(getApplicationContext(), TimerWidgetProvider.class).setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE).putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetID);
+            Log.d("onConfirmButtonClick", "entryTime = " + entryTime + " widgetID = " + widgetID + " timeTypeEntry = " + timeTypeEntry);
+            Intent updateIntent = new Intent(getApplicationContext(), TimerWidgetProvider.class).setAction(TimerWidgetProvider.ACTION_RESET).putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetID);
             sendBroadcast(updateIntent);
+            Intent updateTimerIntent = new Intent(TimerService.ACTION_UPDATE_TIMER).putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetID);
+            sendBroadcast(updateTimerIntent);
             finish();
         } else {
             Toast.makeText(getApplicationContext(), "Please enter a valid number and select a time type.", Toast.LENGTH_LONG).show();

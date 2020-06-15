@@ -13,6 +13,7 @@ import android.os.IBinder;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 
 
 public class TimerWidgetProvider extends AppWidgetProvider {
@@ -25,12 +26,11 @@ public class TimerWidgetProvider extends AppWidgetProvider {
     public static final String ACTION_SLEEP = "com.timerwidget.widget.action.SLEEP";
     public static final String ACTION_FINISH = "com.timerwidget.widget.action.FINISH";
     public static final String EXTRA_TIME_STRING = "com.timerwidget.widget.extra.TIME_STRING";
+    public static final String ACTION_RESET = "com.timerwidget.widget.extra.RESET";
     public static final String SERVICE_STARTED = "com.timerwidget.widget.SERVICE_STARTED";
     public static final String EXTRA_TIME_VALUE = "com.timerwidget.widget.extra.TIME_VALUE";
 
     private ArrayMap<Integer, Boolean> widgetActiveArrayMap = new ArrayMap<>();
-    private TimerService boundService;
-    private boolean isBound = false;
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -45,43 +45,24 @@ public class TimerWidgetProvider extends AppWidgetProvider {
                     views.setOnClickPendingIntent(R.id.playPauseButton, getPendingBroadcast(context, ACTION_PAUSE, appwidgetID));
                     views.setTextViewText(R.id.playPauseButton, "PAUSE");
                     views.setBoolean(R.id.stopButton, "setEnabled", true);
-                    if(isBound){
-                        widgetActiveArrayMap.replace(appwidgetID, true);
-                        if(boundService.timerExists(appwidgetID)){
-                            boundService.resume(appwidgetID);
-                        } else {
-                            boundService.addTimer(appwidgetID, true);
-                        }
-                    }
+                    views.setTextColor(R.id.stopButton, context.getResources().getColor(android.R.color.white, null));
+                    widgetActiveArrayMap.replace(appwidgetID, true);
+                    context.sendBroadcast(new Intent(TimerService.ACTION_PLAY).putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appwidgetID));
                     AppWidgetManager.getInstance(context).updateAppWidget(appwidgetID, views);
                     break;
                 }
                 case ACTION_PAUSE:{
                     views.setOnClickPendingIntent(R.id.playPauseButton, getPendingBroadcast(context, ACTION_PLAY, appwidgetID));
                     views.setTextViewText(R.id.playPauseButton, "PLAY");
-                    if(isBound){
-                        if(boundService.timerExists(appwidgetID)){
-                            boundService.pause(appwidgetID);
-                        } else {
-                            boundService.addTimer(appwidgetID, false);
-                        }
-                    }
+                    widgetActiveArrayMap.replace(appwidgetID, false);
+                    context.sendBroadcast(new Intent(TimerService.ACTION_PAUSE).putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appwidgetID));
                     AppWidgetManager.getInstance(context).updateAppWidget(appwidgetID, views);
                     break;
                 }
                 case ACTION_STOP:{
-                    views.setOnClickPendingIntent(R.id.playPauseButton, getPendingBroadcast(context, ACTION_PLAY, appwidgetID));
-                    views.setTextViewText(R.id.playPauseButton, "PLAY");
-                    views.setBoolean(R.id.stopButton, "setEnabled", false);
-                    if(isBound){
-                        widgetActiveArrayMap.replace(appwidgetID, false);
-                        if(boundService.timerExists(appwidgetID)){
-                            boundService.stop(appwidgetID);
-                        }
-                        context.unbindService(connection);
-                        isBound = false;
-                    }
-                    AppWidgetManager.getInstance(context).updateAppWidget(appwidgetID, views);
+                    widgetActiveArrayMap.replace(appwidgetID, false);
+                    context.sendBroadcast(new Intent(TimerService.ACTION_STOP).putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appwidgetID));
+                    AppWidgetManager.getInstance(context).updateAppWidget(appwidgetID, resetWidget(context, appwidgetID));
                     break;
                 }
                 case ACTION_TICK:{
@@ -96,25 +77,37 @@ public class TimerWidgetProvider extends AppWidgetProvider {
                 }
                 case ACTION_WAKE:{
                     views.setInt(R.id.wakeButton, "setVisibility", 8);
-                    if(!isBound){
-                        Intent serviceIntent = new Intent(context, TimerService.class).putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appwidgetID);
-                        context.startService(serviceIntent);
-                    }
+                    context.startForegroundService(new Intent(context, TimerService.class).setAction(TimerService.ACTION_WAKE).putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appwidgetID));
                     AppWidgetManager.getInstance(context).updateAppWidget(appwidgetID, views);
                     break;
                 }
                 case ACTION_SLEEP:{
-                    views.setInt(R.id.wakeButton, "setVisibility", 0);
                     AppWidgetManager widgetManager = AppWidgetManager.getInstance(context);
                     for(int widgetID: widgetManager.getAppWidgetIds(new ComponentName(context, TimerWidgetProvider.class))){
-                        widgetManager.updateAppWidget(widgetID, views);
+                        RemoteViews resetView = resetWidget(context, widgetID);
+                        resetView.setInt(R.id.wakeButton, "setVisibility", 0);
+                        widgetManager.updateAppWidget(widgetID, resetView);
                     }
-                    widgetManager.updateAppWidget(appwidgetID, views);
                     break;
                 }
-                case SERVICE_STARTED:{
-                    context.bindService(intent, connection, Context.BIND_IMPORTANT);
+                case ACTION_RESET:{
+                    AppWidgetManager.getInstance(context).updateAppWidget(appwidgetID, resetWidget(context, appwidgetID));
                     break;
+                }
+                case AppWidgetManager.ACTION_APPWIDGET_UPDATE:{
+                    String ids = "";
+                    for(int id: AppWidgetManager.getInstance(context).getAppWidgetIds(new ComponentName(context, TimerWidgetProvider.class))){
+                        ids = ids.concat(" " + id + " ");
+                    }
+                    String extraids = "";
+                    int[] extraArr = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS);
+                    if(extraArr != null){
+                        for(int id: extraArr){
+                            extraids = extraids.concat(" " + id + " ");
+                        }
+                    }
+
+                    Log.d("TimerWidgetProvider", "IDS = " + ids + " extraIDs = " + extraids);
                 }
                 default: {
 
@@ -123,44 +116,38 @@ public class TimerWidgetProvider extends AppWidgetProvider {
         }
     }
 
-    private ServiceConnection connection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            TimerService.LocalBinder binder = (TimerService.LocalBinder) iBinder;
-            boundService = binder.getService();
-            isBound = true;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
-            boundService = null;
-            isBound = false;
-        }
-    };
+    @Override
+    public void onDisabled(Context context) {
+        super.onDisabled(context);
+        context.stopService(new Intent(context, TimerService.class));
+    }
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         super.onUpdate(context, appWidgetManager, appWidgetIds);
         for(int appWidgetId: appWidgetIds){
-            boolean timerRunning = false;
-            if(isBound){
-                timerRunning = boundService.timerRunning(appWidgetId);
+            Toast.makeText(context, "onUpdate " + appWidgetId, Toast.LENGTH_LONG).show();
+            try{
+                boolean timerRunning = widgetActiveArrayMap.get(appWidgetId);
                 if(!timerRunning){
+                    Log.d("TimerWidgetProvider", "updateAppWidget called");
                     appWidgetManager.updateAppWidget(appWidgetId, resetWidget(context, appWidgetId));
                 }
-            } else {
+            } catch(Exception ex){
+                Log.d("TimerWidgetProvider", "updateAppWidget called in exception");
+                widgetActiveArrayMap.put(appWidgetId, false);
                 appWidgetManager.updateAppWidget(appWidgetId, resetWidget(context, appWidgetId));
             }
-            Log.d("onUpdate", "isBound = " + isBound + " timerRunning = " + timerRunning);
         }
     }
 
 
     private PendingIntent getPendingBroadcast(Context context, String action, int widgetId){
+        Log.d("TimerWidgetProvider", "PendingBroadcast Action = " + action + " Created id = " + widgetId);
         Intent intent = new Intent(context, TimerWidgetProvider.class);
         intent.setAction(action);
         intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
-        return PendingIntent.getBroadcast(context, 0, intent, 0);
+        return PendingIntent.getBroadcast(context, widgetId, intent, 0);
     }
 
     private RemoteViews resetWidget(Context context, int appWidgetId){
@@ -179,6 +166,8 @@ public class TimerWidgetProvider extends AppWidgetProvider {
         views.setOnClickPendingIntent(R.id.stopButton, getPendingBroadcast(context, ACTION_STOP, appWidgetId));
         views.setTextViewText(R.id.stopButton, "STOP");
         views.setOnClickPendingIntent(R.id.wakeButton, getPendingBroadcast(context, ACTION_WAKE, appWidgetId));
+        views.setBoolean(R.id.stopButton, "setEnabled", false);
+        views.setTextColor(R.id.stopButton, context.getResources().getColor(R.color.half_transparent_white, null));
         return views;
     }
 
@@ -190,9 +179,9 @@ public class TimerWidgetProvider extends AppWidgetProvider {
         if(hours != 0){
             output = String.format("%1$02d:%2$tM:%2$tS", hours, millis);
         } else if (minutes != 0){
-            output = String.format("%1$02d:%2$tS.%2$tL", minutes, millis);
+            output = String.format("%1$02d:%2$tS", minutes, millis);
         } else {
-            output = String.format("%1$tS.%1$tL", millis);
+            output = String.format("%1$tS.%1$tL", millis).substring(0, 4);
         }
         return output;
     }
