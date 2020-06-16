@@ -5,9 +5,9 @@
         android:width="48dp"
         android:height="20dp"/>
     <solid
-        android:color="@color/half_transparent_black" />
+        android:color="@color/half_transparent_primary_dark" />
     <stroke
-        android:color="@color/half_transparent_white"
+        android:color="@color/half_transparent_black"
         android:width="0.5dp"/>
     <corners
         android:topLeftRadius="2dp"

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.appwidget.AppWidgetManager;
 import android.content.BroadcastReceiver;
@@ -25,7 +26,7 @@ public class TimerService extends Service {
     public static final String ACTION_PLAY = "com.timerwidget.timerservice.action.PLAY";
     public static final String ACTION_PAUSE = "com.timerwidget.timerservice.action.PAUSE";
     public static final String ACTION_STOP = "com.timerwidget.timerservice.action.STOP";
-    public static final String ACTION_NEW_TIMER = "com.timerwidget.timerservice.action.NEW_TIMER";
+    public static final String ACTION_SELF_DESTRUCT = "com.timerwidget.timerservice.action.SELF_DESTRUCT";
     public static final String ACTION_WAKE = "com.timerwidget.timerservice.action.WAKE";
     public static final String ACTION_UPDATE_TIMER = "com.timerwidget.timerservice.UPDATE_TIMER";
     public static final int NOTIFICATION_ID = 1;
@@ -47,9 +48,16 @@ public class TimerService extends Service {
         filter.addAction(ACTION_PAUSE);
         filter.addAction(ACTION_STOP);
         filter.addAction(ACTION_UPDATE_TIMER);
+        filter.addAction(ACTION_SELF_DESTRUCT);
         registerReceiver(receiver, filter);
         createNotificationChannel();
-        startForeground(NOTIFICATION_ID, new Notification.Builder(this, CHANNEL_ID).setContentTitle("Timer Service Running").setContentText("Hi").build());
+        Notification notification = new Notification.Builder(this, CHANNEL_ID)
+                .setContentTitle("Timer Service Running")
+                .setContentText("Click to stop")
+                .setSmallIcon(R.drawable.ic_notification_icon)
+                .setContentIntent(PendingIntent.getBroadcast(this, 0 , new Intent(ACTION_SELF_DESTRUCT), 0))
+                .build();
+        startForeground(NOTIFICATION_ID, notification);
         Log.d("TimerService", "onCreate receiver registered");
 
         selfDestructTimer = new PausableCDTimer(-1, 300000, true) {
@@ -57,8 +65,7 @@ public class TimerService extends Service {
             public void tick(long millisLeft) { }
             @Override
             public void finish() {
-                stopSelf();
-                sendBroadcast(new Intent(getApplicationContext(), TimerWidgetProvider.class).setAction(TimerWidgetProvider.ACTION_SLEEP));
+                selfDestruct();
             }
         };
     }
@@ -102,6 +109,10 @@ public class TimerService extends Service {
                     case ACTION_UPDATE_TIMER:{
                         deleteTimer(widgetID);
                         addTimer(widgetID, false);
+                        break;
+                    }
+                    case ACTION_SELF_DESTRUCT:{
+                        selfDestruct();
                         break;
                     }
                 }
@@ -190,5 +201,10 @@ public class TimerService extends Service {
             if(timerArrayMap.valueAt(i).isTimerRunning()) return true;
         }
         return false;
+    }
+
+    private void selfDestruct(){
+        stopSelf();
+        sendBroadcast(new Intent(getApplicationContext(), TimerWidgetProvider.class).setAction(TimerWidgetProvider.ACTION_SLEEP));
     }
 }
