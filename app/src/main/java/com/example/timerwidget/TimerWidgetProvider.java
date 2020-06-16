@@ -11,7 +11,6 @@ import android.content.SharedPreferences;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.widget.RemoteViews;
-import android.widget.Toast;
 
 
 public class TimerWidgetProvider extends AppWidgetProvider {
@@ -119,7 +118,6 @@ public class TimerWidgetProvider extends AppWidgetProvider {
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         super.onUpdate(context, appWidgetManager, appWidgetIds);
         for(int appWidgetId: appWidgetIds){
-            Toast.makeText(context, "Timer Widget Added", Toast.LENGTH_LONG).show();
             try{
                 boolean timerRunning = widgetActiveArrayMap.get(appWidgetId);
                 if(!timerRunning){
