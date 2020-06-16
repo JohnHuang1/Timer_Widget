@@ -21,5 +21,7 @@
     <string name="min">Min</string>
     <string name="sec">Sec</string>
     <string name="confirm">CONFIRM</string>
+    <string name="timer_length">Timer Length</string>
+    <string name="main_activity_welcome_msg">Go to widgets to find the timer for your home screen.\nHope you like it!</string>
     <integer name="default_timer_length">1200000</integer>
 </resources>

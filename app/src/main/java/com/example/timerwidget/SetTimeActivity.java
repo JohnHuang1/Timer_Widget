@@ -1,7 +1,9 @@
 package com.example.timerwidget;
 
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
@@ -15,8 +17,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.w3c.dom.Text;
-
 public class SetTimeActivity extends AppCompatActivity {
     int widgetID = AppWidgetManager.INVALID_APPWIDGET_ID;
     @Override
@@ -25,6 +25,8 @@ public class SetTimeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_set_time);
         Intent intent = getIntent();
         widgetID = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
+        SharedPreferences preferences = getSharedPreferences(getString(R.string.widget_time_pref_key), Context.MODE_PRIVATE);
+        long startingTime = preferences.getLong(getString(R.string.pref_time_key) + widgetID, getResources().getInteger(R.integer.default_timer_length));
         EditText timeEditText = findViewById(R.id.editTextTime);
         timeEditText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -55,13 +57,20 @@ public class SetTimeActivity extends AppCompatActivity {
 
             }
         });
+
+        timeEditText.setText(millisToTime(startingTime));
+
+        ActionBar actionBar = getSupportActionBar();
+        if(actionBar != null){
+            actionBar.setTitle(getString(R.string.set_time));
+        }
     }
 
     public void onConfirmButtonClick(View view){
         EditText editTextTime = findViewById(R.id.editTextTime);
         String userEntry = editTextTime.getText().toString();
         try{
-            Integer.parseInt(userEntry);
+            Long.parseLong(userEntry);
         } catch(Exception ex){
             Toast.makeText(getApplicationContext(), "Please enter a valid number", Toast.LENGTH_LONG).show();
             return;
@@ -79,6 +88,10 @@ public class SetTimeActivity extends AppCompatActivity {
                 }
             }
             long entryTime = Integer.parseInt(arr[0]) * 1000 + Integer.parseInt(arr[1]) * 60000 + Integer.parseInt(arr[2]) * 3600000;
+            if(entryTime > 172800000){
+                Toast.makeText(getApplicationContext(), "Timer cannot be more than 48 hours long", Toast.LENGTH_LONG).show();
+                return;
+            }
             SharedPreferences preferences = getSharedPreferences(getString(R.string.widget_time_pref_key), Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = preferences.edit();
             editor.putLong(getString(R.string.pref_time_key) + widgetID, entryTime);
@@ -92,6 +105,14 @@ public class SetTimeActivity extends AppCompatActivity {
         } else {
             Toast.makeText(getApplicationContext(), "Please enter a valid number", Toast.LENGTH_LONG).show();
         }
+    }
+
+    @SuppressLint("DefaultLocale")
+    private String millisToTime(long millis){
+        long hours = millis / 3600000;
+        String output;
+        output = String.format("%1$02d%2$tM%2$tS", hours, millis);
+        return output;
     }
 
 }

@@ -7,9 +7,7 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.os.IBinder;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.widget.RemoteViews;
@@ -27,8 +25,6 @@ public class TimerWidgetProvider extends AppWidgetProvider {
     public static final String ACTION_FINISH = "com.timerwidget.widget.action.FINISH";
     public static final String EXTRA_TIME_STRING = "com.timerwidget.widget.extra.TIME_STRING";
     public static final String ACTION_RESET = "com.timerwidget.widget.extra.RESET";
-    public static final String SERVICE_STARTED = "com.timerwidget.widget.SERVICE_STARTED";
-    public static final String EXTRA_TIME_VALUE = "com.timerwidget.widget.extra.TIME_VALUE";
 
     private ArrayMap<Integer, Boolean> widgetActiveArrayMap = new ArrayMap<>();
 
@@ -109,9 +105,6 @@ public class TimerWidgetProvider extends AppWidgetProvider {
 
                     Log.d("TimerWidgetProvider", "IDS = " + ids + " extraIDs = " + extraids);
                 }
-                default: {
-
-                }
             }
         }
     }
@@ -126,15 +119,13 @@ public class TimerWidgetProvider extends AppWidgetProvider {
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         super.onUpdate(context, appWidgetManager, appWidgetIds);
         for(int appWidgetId: appWidgetIds){
-            Toast.makeText(context, "onUpdate " + appWidgetId, Toast.LENGTH_LONG).show();
+            Toast.makeText(context, "Timer Widget Added", Toast.LENGTH_LONG).show();
             try{
                 boolean timerRunning = widgetActiveArrayMap.get(appWidgetId);
                 if(!timerRunning){
-                    Log.d("TimerWidgetProvider", "updateAppWidget called");
                     appWidgetManager.updateAppWidget(appWidgetId, resetWidget(context, appWidgetId));
                 }
             } catch(Exception ex){
-                Log.d("TimerWidgetProvider", "updateAppWidget called in exception");
                 widgetActiveArrayMap.put(appWidgetId, false);
                 appWidgetManager.updateAppWidget(appWidgetId, resetWidget(context, appWidgetId));
             }
@@ -143,7 +134,6 @@ public class TimerWidgetProvider extends AppWidgetProvider {
 
 
     private PendingIntent getPendingBroadcast(Context context, String action, int widgetId){
-        Log.d("TimerWidgetProvider", "PendingBroadcast Action = " + action + " Created id = " + widgetId);
         Intent intent = new Intent(context, TimerWidgetProvider.class);
         intent.setAction(action);
         intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
@@ -153,7 +143,6 @@ public class TimerWidgetProvider extends AppWidgetProvider {
     private RemoteViews resetWidget(Context context, int appWidgetId){
         SharedPreferences preferences = context.getSharedPreferences(context.getString(R.string.widget_time_pref_key), Context.MODE_PRIVATE);
         long startingTime = preferences.getLong(context.getString(R.string.pref_time_key) + appWidgetId, context.getResources().getInteger(R.integer.default_timer_length));
-        Log.d("resetWidget()", "startingTime = " + startingTime + " widgetID = " + appWidgetId);
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_timer);
         views.setOnClickPendingIntent(R.id.timerTextView, PendingIntent.getActivity(
                 context,

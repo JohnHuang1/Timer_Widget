@@ -12,15 +12,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.os.Binder;
+import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.ArrayMap;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
-
-import java.util.Timer;
 
 public class TimerService extends Service {
     public static final String ACTION_PLAY = "com.timerwidget.timerservice.action.PLAY";
@@ -33,6 +31,7 @@ public class TimerService extends Service {
     public static final String CHANNEL_ID = "TimerServiceNotificationChannel";
     private PausableCDTimer selfDestructTimer;
     ArrayMap<Integer, PausableCDTimer> timerArrayMap = new ArrayMap<>();
+    MediaPlayer mediaPlayer;
 
     @Nullable
     @Override
@@ -60,6 +59,8 @@ public class TimerService extends Service {
         startForeground(NOTIFICATION_ID, notification);
         Log.d("TimerService", "onCreate receiver registered");
 
+        mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.timer_widget_beep_beep);
+
         selfDestructTimer = new PausableCDTimer(-1, 300000, true) {
             @Override
             public void tick(long millisLeft) { }
@@ -72,7 +73,7 @@ public class TimerService extends Service {
 
     private void createNotificationChannel() {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
-            NotificationChannel serviceChannel = new NotificationChannel(CHANNEL_ID, "TimerServiceNotificationChannel", NotificationManager.IMPORTANCE_HIGH);
+            NotificationChannel serviceChannel = new NotificationChannel(CHANNEL_ID, "TimerServiceNotificationChannel", NotificationManager.IMPORTANCE_LOW);
             NotificationManager manager = getSystemService(NotificationManager.class);
             manager.createNotificationChannel(serviceChannel);
         }
@@ -102,8 +103,9 @@ public class TimerService extends Service {
                         break;
                     }
                     case ACTION_STOP:{
-                        if(!anyTimersRunning()) selfDestructTimer.start();
+                        if(noTimersRunning()) selfDestructTimer.start();
                         stop(widgetID);
+                        sendBroadcast(new Intent(getApplicationContext(), TimerWidgetProvider.class).setAction(TimerWidgetProvider.ACTION_RESET).putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetID));
                         break;
                     }
                     case ACTION_UPDATE_TIMER:{
@@ -153,8 +155,8 @@ public class TimerService extends Service {
             }
             @Override
             public void finish() {
-                //TODO: add Ringtone
-                if(!anyTimersRunning()) selfDestructTimer.start();
+                mediaPlayer.start();
+                if(noTimersRunning()) selfDestructTimer.start();
                 sendBroadcast(new Intent(getApplicationContext(), TimerWidgetProvider.class).setAction(TimerWidgetProvider.ACTION_FINISH).putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetID));
             }
         };
@@ -166,10 +168,6 @@ public class TimerService extends Service {
     public void pause(int widgetID){
         PausableCDTimer timer = timerArrayMap.get(widgetID);
         if(timer != null) timer.pause();
-    }
-    public void resume(int widgetID){
-        PausableCDTimer timer = timerArrayMap.get(widgetID);
-        if(timer != null) timer.resume();
     }
     public void start(int widgetID){
         PausableCDTimer timer = timerArrayMap.get(widgetID);
@@ -183,27 +181,18 @@ public class TimerService extends Service {
             timer.stop();
         }
     }
-    public boolean timerExists(int widgetID){
-        return timerArrayMap.containsKey(widgetID);
-    }
-    public boolean timerRunning(int widgetID){
-        if(timerExists(widgetID)){
-            PausableCDTimer timer = timerArrayMap.get(widgetID);
-            if(timer != null){
-                return timer.isTimerRunning();
-            }
-        }
-        return false;
-    }
 
-    private boolean anyTimersRunning(){
+    private boolean noTimersRunning(){
         for(int i = 0; i < timerArrayMap.size(); i++){
-            if(timerArrayMap.valueAt(i).isTimerRunning()) return true;
+            if(timerArrayMap.valueAt(i).isTimerRunning()) return false;
         }
-        return false;
+        return true;
     }
 
     private void selfDestruct(){
+        for(int i = 0; i < timerArrayMap.size(); i++){
+            timerArrayMap.valueAt(i).stop();
+        }
         stopSelf();
         sendBroadcast(new Intent(getApplicationContext(), TimerWidgetProvider.class).setAction(TimerWidgetProvider.ACTION_SLEEP));
     }

@@ -5,7 +5,7 @@ import android.util.Log;
 
 abstract class PausableCDTimer {
     private CountDownTimer timer = null;
-    private long defaultLength = 0;
+    private long defaultLength;
     private long timeLeft = 0;
     private boolean timerRunning = false;
     public int widgetID;
@@ -59,11 +59,6 @@ abstract class PausableCDTimer {
             timer.cancel();
             create(timeLeft, false);
             timerRunning = false;
-        }
-    }
-    public void resume(){
-        if(!timerRunning){
-            create(timeLeft, true);
         }
     }
 

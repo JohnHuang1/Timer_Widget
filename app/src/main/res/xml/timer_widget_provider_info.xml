@@ -7,6 +7,7 @@
     android:minResizeWidth="84dp"
     android:initialLayout="@layout/widget_timer"
     android:resizeMode="vertical|horizontal"
-    android:widgetCategory="home_screen">
+    android:widgetCategory="home_screen"
+    android:previewImage="@drawable/timer_widget_preview_image">
 
 </appwidget-provider>
