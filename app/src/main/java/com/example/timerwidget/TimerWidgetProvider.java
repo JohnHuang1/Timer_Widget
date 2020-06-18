@@ -89,21 +89,6 @@ public class TimerWidgetProvider extends AppWidgetProvider {
                     AppWidgetManager.getInstance(context).updateAppWidget(appwidgetID, resetWidget(context, appwidgetID));
                     break;
                 }
-                case AppWidgetManager.ACTION_APPWIDGET_UPDATE:{
-                    String ids = "";
-                    for(int id: AppWidgetManager.getInstance(context).getAppWidgetIds(new ComponentName(context, TimerWidgetProvider.class))){
-                        ids = ids.concat(" " + id + " ");
-                    }
-                    String extraids = "";
-                    int[] extraArr = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS);
-                    if(extraArr != null){
-                        for(int id: extraArr){
-                            extraids = extraids.concat(" " + id + " ");
-                        }
-                    }
-
-                    Log.d("TimerWidgetProvider", "IDS = " + ids + " extraIDs = " + extraids);
-                }
             }
         }
     }

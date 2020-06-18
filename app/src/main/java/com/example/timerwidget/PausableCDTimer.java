@@ -1,7 +1,6 @@
 package com.example.timerwidget;
 
 import android.os.CountDownTimer;
-import android.util.Log;
 
 abstract class PausableCDTimer {
     private CountDownTimer timer = null;
@@ -31,19 +30,19 @@ abstract class PausableCDTimer {
             @Override
             public void onFinish() {
                 finish();
+                timerRunning = false;
             }
         };
         if(runAtStart) start();
     }
     public void start(){
-        Log.d("PausableCDTimer", "Timer Started timerRunning = " + timerRunning);
         if(!timerRunning){
             if(timer != null){
                 timer.start();
-                timerRunning = true;
             } else {
                 create(timeLeft, true);
             }
+            timerRunning = true;
         }
     }
     public void stop(){
@@ -61,7 +60,6 @@ abstract class PausableCDTimer {
             timerRunning = false;
         }
     }
-
     public boolean isTimerRunning(){
         return timerRunning;
     }

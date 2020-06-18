@@ -57,7 +57,6 @@ public class TimerService extends Service {
                 .setContentIntent(PendingIntent.getBroadcast(this, 0 , new Intent(ACTION_SELF_DESTRUCT), 0))
                 .build();
         startForeground(NOTIFICATION_ID, notification);
-        Log.d("TimerService", "onCreate receiver registered");
 
         mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.timer_widget_beep_beep);
 
@@ -140,7 +139,6 @@ public class TimerService extends Service {
             @SuppressLint("DefaultLocale")
             @Override
             public void tick(long millisLeft) {
-                Log.d("PausableCDTimer", "tick timeLeft = " + millisLeft);
                 long hours = millisLeft / 3600000;
                 long minutes = (millisLeft % 3600000) / 60000;
                 String output;
